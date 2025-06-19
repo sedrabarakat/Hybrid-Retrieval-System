@@ -12,7 +12,7 @@ import storage.vector_storage as storage
 def tokenizer(text, dataset_name):
     return get_preprocessed_text_terms(text, dataset_name)
 
-def build_save_vectorizer_first_doc_only(dataset_name: str):
+def build_save_vectorizer(dataset_name: str):
     conn = mysql.connector.connect(
         host="localhost",
         user="root",
@@ -20,7 +20,7 @@ def build_save_vectorizer_first_doc_only(dataset_name: str):
         database="ir"
     )
     cursor = conn.cursor()
-    cursor.execute("SELECT processed_text FROM documents WHERE dataset_name = %s LIMIT 1", (dataset_name,))
+    cursor.execute("SELECT id, text FROM documents WHERE dataset_name = %s LIMIT 1", (dataset_name,))
     row = cursor.fetchone()
     cursor.close()
     conn.close()
@@ -29,7 +29,9 @@ def build_save_vectorizer_first_doc_only(dataset_name: str):
         print(f"No document found for dataset '{dataset_name}'")
         return
 
-    raw_texts = [row[0]]
+    doc_id, raw_text = row
+    raw_texts = [raw_text]
+
 
     # نمرر tokenizer مع dataset_name باستخدام partial
     tokenizer_with_dataset = partial(tokenizer, dataset_name=dataset_name)
@@ -44,14 +46,11 @@ def build_save_vectorizer_first_doc_only(dataset_name: str):
     tfidf_matrix = vectorizer.fit_transform(raw_texts)
 
     # حفظ vectorizer - الآن سيتم حفظه بدون مشاكل pickling
-    storage.save_vectorizer(vectorizer, dataset_name + "_first_doc")
-    storage.save_tfidf_matrix(tfidf_matrix, dataset_name + "_first_doc")
+    file_suffix = f"doc_{doc_id}"
+    storage.save_vectorizer(vectorizer, f"{dataset_name}_{file_suffix}")
+    storage.save_tfidf_matrix(tfidf_matrix, f"{dataset_name}_{file_suffix}")
+
 
     embeddings = tfidf_matrix.toarray()
-    print(f"[✓] First embedding for '{dataset_name}' (first doc only):")
+    print(f"[✓]  '{dataset_name}' :")
     print(embeddings[0])
-
-if __name__ == "__main__":
-    datasets = ["beir", "antique", "quora"]
-    for ds in datasets:
-        build_save_vectorizer_first_doc_only(ds)
