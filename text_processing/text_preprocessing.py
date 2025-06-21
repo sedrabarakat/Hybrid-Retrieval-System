@@ -19,6 +19,10 @@ from textacy import preprocessing
 
 
 def get_preprocessed_text_terms(text: str, dataset_name: str) -> list:
+
+    if not text or not text.strip():
+        return []
+    
     if(dataset_name == "antique" or dataset_name == "antique-queries"):
         text = preprocessing.remove.html_tags(text)
         text = preprocessing.remove.punctuation(text)
@@ -181,10 +185,23 @@ def _get_wordnet_pos(treebank_tag):
 
 def _lemmatize_tokens(tokens: list) -> list:
     lemmatizer = WordNetLemmatizer()
-    # فقط استعمل pos_tag بدون باراميترات اضافية
-    tagged_tokens = pos_tag(tokens)  # بدون lang أو غيره
-    lemmatized_tokens = [lemmatizer.lemmatize(token, pos=_get_wordnet_pos(pos_tag)) for token, pos_tag in tagged_tokens]
-    return lemmatized_tokens
+
+    try:
+        tagged_tokens = pos_tag(tokens)
+    except Exception as e:
+        print(f"[⛔] خطأ في pos_tag مع التوكنات: {tokens}")
+        raise e
+
+    try:
+        lemmatized_tokens = [
+            lemmatizer.lemmatize(token, pos=_get_wordnet_pos(tag))
+            for token, tag in tagged_tokens
+        ]
+        return lemmatized_tokens
+    except Exception as e:
+        print(f"[⛔] خطأ أثناء lemmatization - التوكنات: {tokens}")
+        print(f"Tagged tokens: {tagged_tokens}")
+        raise e
 
 
 def _chat_conversion(text):
