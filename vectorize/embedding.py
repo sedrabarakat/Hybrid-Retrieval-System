@@ -2,30 +2,42 @@
 from sentence_transformers import SentenceTransformer
 from mysql import connector
 import joblib
-# ✅ الاتصال بقاعدة البيانات
-conn = connector.connect(
+import storage.vector_storage as storage
+
+
+def generateEmbading(dataset_name:str):
+    conn = connector.connect(
         host="localhost",
         user="root",
         password="",
         database="ir"
     )
-cursor = conn.cursor()
+    cursor = conn.cursor()
 
-# ✅ جلب الوثائق من العمود processed_text
-cursor.execute("SELECT processed_text FROM documents")
-rows = cursor.fetchall()
+    cursor.execute("SELECT processed_text FROM documents WHERE dataset_name = %s", (dataset_name,))
+    rows = cursor.fetchall()
 
-# ✅ استخراج النصوص (الوثائق) من الصفوف
-documents = [row[0] for row in rows]
 
-conn.close()
+    documents = [row[0] for row in rows]
 
-# ✅ تحميل نموذج BERT
-model = SentenceTransformer('all-MiniLM-L6-v2')
+    conn.close()
 
-# ✅ توليد Embeddings لكل وثيقة
-embeddings = model.encode(documents[0])
+    if not documents:
+        print(f"[!] لا يوجد وثائق في مجموعة البيانات: '{dataset_name}'")
+        return
 
-# ✅ مثال: طباعة تمثيل أول وثيقة
-print(embeddings[0])
-joblib.dump(embeddings, 'embeddings.joblib')
+
+    model = SentenceTransformer('all-MiniLM-L6-v2')
+
+
+    embeddings = model.encode(documents)
+    
+
+   
+    file_suffix = f"{dataset_name}_all"
+    storage.save_embeddings(embeddings, file_suffix)
+    
+
+    print(f"[✓] تم بناء وحفظ نموذج TF-IDF لمجموعة البيانات: {dataset_name}")
+
+    
