@@ -45,6 +45,16 @@ def load_embeddings(name: str, vectorizer_type: str = "embedding"):
     return np.load(path)
 
 def save_doc_ids(doc_ids, file_suffix, vectorizer_type="tfidf"):
-    path = os.path.join(BASE_PATH1, vectorizer_type, f"{file_suffix}_doc_ids.joblib")
+    path = os.path.join(BASE_PATH, vectorizer_type, f"{file_suffix}_doc_ids.joblib")
+    return joblib.load(path)
+
+
+
+def save_hybrid(array, name: str, vectorizer_type: str = "Hybrid"):
+    path = os.path.join(_get_dir(vectorizer_type), f"{name}_hybrid.joblib")
+    joblib.dump(array, path)
+
+def load_hybrid(name: str, vectorizer_type: str = "Hybrid"):
+    path = os.path.join(BASE_PATH, vectorizer_type, f"{name}_hybrid.joblib")
     return joblib.load(path)
 

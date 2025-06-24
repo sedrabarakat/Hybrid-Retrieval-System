@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="grammars">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/nltk_data/nltk_data/grammars/spanish_grammars.zip!/" />
+      <root url="jar://$PROJECT_DIR$/nltk_data/nltk_data/grammars/book_grammars.zip!/" />
+      <root url="jar://$PROJECT_DIR$/nltk_data/nltk_data/grammars/basque_grammars.zip!/" />
+      <root url="jar://$PROJECT_DIR$/nltk_data/nltk_data/grammars/large_grammars.zip!/" />
+      <root url="jar://$PROJECT_DIR$/nltk_data/nltk_data/grammars/sample_grammars.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

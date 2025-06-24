@@ -12,7 +12,8 @@ import storage.vector_storage as storage
 from sentence_transformers import SentenceTransformer
 from mysql import connector
 import joblib
-import storage.vector_storage as storage
+from storage import vector_storage
+
 
 
 def generateEmbading(dataset_name:str):

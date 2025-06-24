@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="models">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/nltk_data/nltk_data/models/wmt15_eval.zip!/" />
+      <root url="jar://$PROJECT_DIR$/nltk_data/nltk_data/models/bllip_wsj_no_aux.zip!/" />
+      <root url="jar://$PROJECT_DIR$/nltk_data/nltk_data/models/word2vec_sample.zip!/" />
+      <root url="jar://$PROJECT_DIR$/nltk_data/nltk_data/models/moses_sample.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
