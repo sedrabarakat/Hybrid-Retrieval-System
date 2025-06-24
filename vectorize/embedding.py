@@ -2,7 +2,8 @@
 from sentence_transformers import SentenceTransformer
 from mysql import connector
 import joblib
-import storage.vector_storage as storage
+from storage import vector_storage
+
 
 
 def generateEmbading(dataset_name:str):
@@ -27,6 +28,7 @@ def generateEmbading(dataset_name:str):
         return
 
 
+
     model = SentenceTransformer('all-MiniLM-L6-v2')
 
 
@@ -35,7 +37,7 @@ def generateEmbading(dataset_name:str):
 
    
     file_suffix = f"{dataset_name}_all"
-    storage.save_embeddings(embeddings, file_suffix)
+    vector_storage.save_embeddings(embeddings, file_suffix)
     
 
     print(f"[✓] تم بناء وحفظ نموذج TF-IDF لمجموعة البيانات: {dataset_name}")

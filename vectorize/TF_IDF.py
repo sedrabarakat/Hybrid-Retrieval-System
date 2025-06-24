@@ -1,12 +1,8 @@
 import nltk
 nltk.data.path.append("C:/Users/Barakat/AppData/Roaming/nltk_data")
-
-
-
 import sys
 import os
 from functools import partial
-
 
 
 for pkg in ['stopwords', 'punkt', 'wordnet', 'omw-1.4', 'averaged_perceptron_tagger']:
@@ -15,7 +11,6 @@ for pkg in ['stopwords', 'punkt', 'wordnet', 'omw-1.4', 'averaged_perceptron_tag
     except LookupError:
         nltk.download(pkg, download_dir="C:/Users/Barakat/AppData/Roaming/nltk_data")
 
-# ⬇️ إعداد المسارات
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import mysql.connector
@@ -67,7 +62,6 @@ def build_save_vectorizer(dataset_name: str):
     vectorizer_type = "tfidf"
     file_suffix = f"{dataset_name}_all"
     storage.save_vectorizer(vectorizer, file_suffix, vectorizer_type=vectorizer_type)
-    print('tandeef endd')
     storage.save_tfidf_matrix(tfidf_matrix, file_suffix, vectorizer_type=vectorizer_type)
 
     print(f"[✓] تم بناء وحفظ نموذج TF-IDF لمجموعة البيانات: {dataset_name}")
