@@ -6,6 +6,8 @@ import numpy as np
 # المسار الأساسي
 BASE_PATH = "saved_models"
 
+
+
 # إنشاء المجلد تلقائياً حسب نوع الـ vectorizer
 def _get_dir(vectorizer_type: str) -> str:
     dir_path = os.path.join(BASE_PATH, vectorizer_type)
@@ -41,3 +43,8 @@ def save_embeddings(array, name: str, vectorizer_type: str = "embedding"):
 def load_embeddings(name: str, vectorizer_type: str = "embedding"):
     path = os.path.join(BASE_PATH, vectorizer_type, f"{name}_embeddings.npy")
     return np.load(path)
+
+def save_doc_ids(doc_ids, file_suffix, vectorizer_type="tfidf"):
+    path = os.path.join(BASE_PATH1, vectorizer_type, f"{file_suffix}_doc_ids.joblib")
+    return joblib.load(path)
+
