@@ -6,3 +6,9 @@ saved_models/
 __pycache__/
 *.pyc
 .env
+# Ignore all contents inside saved_models folders
+vectorize/saved_models/**/*
+indexing/saved_models/**/*
+
+*.joblib
+*.npz
