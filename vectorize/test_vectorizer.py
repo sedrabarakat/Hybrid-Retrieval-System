@@ -9,12 +9,13 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from text_processing.text_preprocessing import get_preprocessed_text_terms
 import storage.vector_storage as storage  # تأكد إن المسار صحيح
 
+# TODO API
 # دالة تهيئة توكنيزر خاصة بالداتاست
 def make_tokenizer(dataset_name):
     def tokenizer(text):
         return get_preprocessed_text_terms(text, dataset_name)
     return tokenizer
-
+# TODO API TO RETURN ID AND TEXT FOR ALL THE RECORDS
 def build_save_vectorizer_first_doc_only(dataset_name: str):
     # الاتصال بقاعدة البيانات
     conn = mysql.connector.connect(
@@ -49,6 +50,7 @@ def build_save_vectorizer_first_doc_only(dataset_name: str):
     # تدريب الـ TF-IDF على النصوص
     tfidf_matrix = vectorizer.fit_transform(raw_texts)
 
+# TODO STORAGE SERVICE 
     # حفظ النموذج والمصفوفة
     storage.save_vectorizer(vectorizer, dataset_name + "_test")
     storage.save_tfidf_matrix(tfidf_matrix, dataset_name + "_test")

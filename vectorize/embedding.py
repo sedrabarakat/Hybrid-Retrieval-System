@@ -6,6 +6,8 @@ import storage.vector_storage as storage
 
 
 def generateEmbading(dataset_name:str):
+
+    # TODO GET processed_text FOR dataset_name
     conn = connector.connect(
         host="localhost",
         user="root",
@@ -32,9 +34,9 @@ def generateEmbading(dataset_name:str):
 
     embeddings = model.encode(documents)
     
-
-   
     file_suffix = f"{dataset_name}_all"
+
+    # TODO STORE 
     storage.save_embeddings(embeddings, file_suffix)
     
 
