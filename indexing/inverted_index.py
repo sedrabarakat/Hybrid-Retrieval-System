@@ -1,7 +1,14 @@
+import sys
+import os
+
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 import mysql.connector
 from collections import defaultdict
 import joblib
-import os
+
+from text_processing.text_preprocessing import get_preprocessed_text_terms  # تأكد أن هذا المسار صحيح
 
 def build_inverted_index(dataset_name: str):
     # الاتصال بقاعدة البيانات
@@ -13,21 +20,22 @@ def build_inverted_index(dataset_name: str):
     )
     cursor = conn.cursor()
 
-    # جلب النصوص المعالجة فقط
-    cursor.execute("SELECT document_id, processed_text FROM documents WHERE dataset_name = %s", (dataset_name,))
+    # جلب النصوص الأصلية (غير المعالجة)
+    cursor.execute("SELECT document_id, text FROM documents WHERE dataset_name = %s", (dataset_name,))
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
 
     inverted_index = defaultdict(set)
 
-    for doc_id, processed_text in rows:
+    for doc_id, raw_text in rows:
         # تجاوز المستندات الفارغة
-        if not processed_text or not processed_text.strip():
-            print(f"[!] الوثيقة {doc_id} تم تجاوزها (النص المعالج فارغ).")
+        if not raw_text or not raw_text.strip():
+            print(f"[!] الوثيقة {doc_id} تم تجاوزها (النص الأصلي فارغ).")
             continue
 
-        terms = processed_text.split()
+        terms = get_preprocessed_text_terms(raw_text, dataset_name)
+
         if not terms:
             print(f"[!] الوثيقة {doc_id} تم تجاوزها (لا توجد كلمات بعد المعالجة).")
             continue

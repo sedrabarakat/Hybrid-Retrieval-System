@@ -1,8 +1,8 @@
-# تجاهل مجلد nltk_data كامل
+
 nltk_data/
 saved_models/
 
-# تجاهل ملفات أو مجلدات أخرى (اختياري)
+
 __pycache__/
 *.pyc
 .env
