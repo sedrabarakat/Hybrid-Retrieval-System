@@ -61,9 +61,17 @@ def save_doc_ids(doc_ids, file_suffix, vectorizer_type="tfidf"):
     path = os.path.join(_get_dir(vectorizer_type), f"{file_suffix}_doc_ids.joblib")
     joblib.dump(doc_ids, path)
 
-# تحميل معرّفات المستندات
+# # تحميل معرّفات المستندات
+# def load_doc_ids(file_suffix, vectorizer_type="tfidf"):
+#     path = os.path.join(BASE_PATH, vectorizer_type, f"{file_suffix}_doc_ids.joblib")
+#     if not os.path.exists(path):
+#         raise FileNotFoundError(f"Document IDs file not found at: {path}")
+#     return joblib.load(path)
+
 def load_doc_ids(file_suffix, vectorizer_type="tfidf"):
     path = os.path.join(BASE_PATH, vectorizer_type, f"{file_suffix}_doc_ids.joblib")
     if not os.path.exists(path):
         raise FileNotFoundError(f"Document IDs file not found at: {path}")
-    return joblib.load(path)
+    doc_ids = joblib.load(path)
+    # نحول الكل إلى سترينغ
+    return [str(doc_id) for doc_id in doc_ids]

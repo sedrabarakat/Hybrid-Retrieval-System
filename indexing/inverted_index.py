@@ -21,7 +21,7 @@ def build_inverted_index(dataset_name: str):
     cursor = conn.cursor()
 
     # جلب النصوص الأصلية (غير المعالجة)
-    cursor.execute("SELECT document_id, text FROM documents WHERE dataset_name = %s", (dataset_name,))
+    cursor.execute("SELECT id, text FROM documents WHERE dataset_name = %s", (dataset_name,))
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
