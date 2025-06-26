@@ -1,6 +1,13 @@
 
 nltk_data/
 saved_models/
+# تجاهل المجلدات الكبيرة
+vectorize/saved_models/
+indexing/saved_models/
+
+# أو بشكل أكثر دقة
+*.joblib
+*.npz
 
 
 __pycache__/
