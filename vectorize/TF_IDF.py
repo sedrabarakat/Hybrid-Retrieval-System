@@ -15,8 +15,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from text_processing.text_preprocessing import get_preprocessed_text_terms
 import storage.vector_storage as storage
 
-def tokenizer(text, dataset_name):
-    return get_preprocessed_text_terms(text, dataset_name)
+def tokenizer(text, dataset_name): return get_preprocessed_text_terms(text, dataset_name)
 
 def build_save_vectorizer(dataset_name: str):
     conn = mysql.connector.connect(
