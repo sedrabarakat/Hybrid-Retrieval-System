@@ -1,4 +1,14 @@
 
+import sys
+import os
+
+# أضف جذر المشروع لمسار بايثون
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
+# بعد إضافة الجذر، يمكن استيراد مجلد storage بشكل صحيح
+import storage.vector_storage as storage
 from sentence_transformers import SentenceTransformer
 from mysql import connector
 import joblib
@@ -7,6 +17,8 @@ from storage import vector_storage
 
 
 def generateEmbading(dataset_name:str):
+    print("[i] بدء الدالة generateEmbading ...", flush=True)
+
     conn = connector.connect(
         host="localhost",
         user="root",
@@ -18,6 +30,7 @@ def generateEmbading(dataset_name:str):
     cursor.execute("SELECT processed_text FROM documents WHERE dataset_name = %s", (dataset_name,))
     rows = cursor.fetchall()
 
+    print(f"[i] عدد الصفوف المسترجعة من قاعدة البيانات: {len(rows)}", flush=True)
 
     documents = [row[0] for row in rows]
 
@@ -27,19 +40,10 @@ def generateEmbading(dataset_name:str):
         print(f"[!] لا يوجد وثائق في مجموعة البيانات: '{dataset_name}'")
         return
 
-
-
     model = SentenceTransformer('all-MiniLM-L6-v2')
-
-
     embeddings = model.encode(documents)
-    
 
-   
     file_suffix = f"{dataset_name}_all"
-    vector_storage.save_embeddings(embeddings, file_suffix)
-    
+    storage.save_embeddings(embeddings, file_suffix)
 
-    print(f"[✓] تم بناء وحفظ نموذج TF-IDF لمجموعة البيانات: {dataset_name}")
-
-    
+    print(f"[✓] تم بناء وحفظ نموذج embeddings لمجموعة البيانات: {dataset_name}")

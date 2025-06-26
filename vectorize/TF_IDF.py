@@ -3,13 +3,10 @@ nltk.data.path.append("C:/Users/Barakat/AppData/Roaming/nltk_data")
 import sys
 import os
 from functools import partial
+import vectorize.tokenizer_definition
 
 
-for pkg in ['stopwords', 'punkt', 'wordnet', 'omw-1.4', 'averaged_perceptron_tagger']:
-    try:
-        nltk.data.find(f'corpora/{pkg}')  # أو taggers/...
-    except LookupError:
-        nltk.download(pkg, download_dir="C:/Users/Barakat/AppData/Roaming/nltk_data")
+
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -28,7 +25,7 @@ def build_save_vectorizer(dataset_name: str):
         database="ir"
     )
     cursor = conn.cursor()
-    cursor.execute("SELECT id, text FROM documents WHERE dataset_name = %s", (dataset_name,))
+    cursor.execute("SELECT id, text FROM documents WHERE dataset_name = %s ", (dataset_name,))
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -41,11 +38,7 @@ def build_save_vectorizer(dataset_name: str):
     raw_texts = []
     doc_ids = []
 
-    for doc_id, raw_text in rows:
-        if not raw_text or not raw_text.strip():
-            print(f"[!] الوثيقة {doc_id} تم تجاوزها: نص فارغ.")
-            continue
-        
+    for doc_id, raw_text in rows: 
         raw_texts.append(raw_text)
         doc_ids.append(doc_id)
 
@@ -62,6 +55,8 @@ def build_save_vectorizer(dataset_name: str):
     file_suffix = f"{dataset_name}_all"
     storage.save_vectorizer(vectorizer, file_suffix, vectorizer_type=vectorizer_type)
     storage.save_tfidf_matrix(tfidf_matrix, file_suffix, vectorizer_type=vectorizer_type)
+    storage.save_doc_ids(doc_ids, file_suffix, vectorizer_type=vectorizer_type)
+
 
     print(f"[✓] تم بناء وحفظ نموذج TF-IDF لمجموعة البيانات: {dataset_name}")
 

@@ -4,7 +4,8 @@ import scipy.sparse
 import numpy as np
 
 # المسار الأساسي
-BASE_PATH = "saved_models"
+BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "vectorize", "saved_models"))
+
 
 # إنشاء المجلد تلقائياً حسب نوع الـ vectorizer
 def _get_dir(vectorizer_type: str) -> str:
@@ -20,7 +21,10 @@ def save_vectorizer(model, name: str, vectorizer_type: str = "tfidf"):
 # تحميل الـ vectorizer
 def load_vectorizer(name: str, vectorizer_type: str = "tfidf"):
     path = os.path.join(BASE_PATH, vectorizer_type, f"{name}_vectorizer.joblib")
-    return joblib.load(path)
+    print(f"Loading vectorizer from: {path}")
+    model = joblib.load(path)
+    print(f"Loaded object type: {type(model)}")
+    return model
 
 # حفظ مصفوفة TF-IDF بصيغة sparse
 def save_tfidf_matrix(matrix, name: str, vectorizer_type: str = "tfidf"):
@@ -42,12 +46,32 @@ def load_embeddings(name: str, vectorizer_type: str = "embedding"):
     path = os.path.join(BASE_PATH, vectorizer_type, f"{name}_embeddings.npy")
     return np.load(path)
 
-
+# حفظ hybrid
 def save_hybrid(array, name: str, vectorizer_type: str = "Hybrid"):
     path = os.path.join(_get_dir(vectorizer_type), f"{name}_hybrid.joblib")
     joblib.dump(array, path)
 
+# تحميل hybrid
 def load_hybrid(name: str, vectorizer_type: str = "Hybrid"):
     path = os.path.join(BASE_PATH, vectorizer_type, f"{name}_hybrid.joblib")
     return joblib.load(path)
 
+# حفظ معرّفات المستندات
+def save_doc_ids(doc_ids, file_suffix, vectorizer_type="tfidf"):
+    path = os.path.join(_get_dir(vectorizer_type), f"{file_suffix}_doc_ids.joblib")
+    joblib.dump(doc_ids, path)
+
+# # تحميل معرّفات المستندات
+# def load_doc_ids(file_suffix, vectorizer_type="tfidf"):
+#     path = os.path.join(BASE_PATH, vectorizer_type, f"{file_suffix}_doc_ids.joblib")
+#     if not os.path.exists(path):
+#         raise FileNotFoundError(f"Document IDs file not found at: {path}")
+#     return joblib.load(path)
+
+def load_doc_ids(file_suffix, vectorizer_type="tfidf"):
+    path = os.path.join(BASE_PATH, vectorizer_type, f"{file_suffix}_doc_ids.joblib")
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Document IDs file not found at: {path}")
+    doc_ids = joblib.load(path)
+    # نحول الكل إلى سترينغ
+    return [str(doc_id) for doc_id in doc_ids]
