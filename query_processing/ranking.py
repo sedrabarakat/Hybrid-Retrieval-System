@@ -13,7 +13,80 @@ from query_processing import QueryProcessor
 
 
 
+
 def match_and_rank(query: str, dataset_name: str, similarity_threshold=0.0001, top_k=None):
+    print("[1] بدء معالجة الاستعلام...")
+    qp = QueryProcessor(dataset_name)
+    query_vector, tokens = qp.process(query)
+    print(f"[2] تم استخراج التوكنز من الاستعلام: {tokens}")
+
+    print("[3] تحميل تمثيلات TF-IDF...")
+    tfidf_matrix = load_tfidf_matrix(f"{dataset_name}_all")
+    print(f"[4] شكل مصفوفة TF-IDF: {tfidf_matrix.shape}")
+
+    print("[5] تحميل قائمة معرفات الوثائق...")
+    doc_ids = load_doc_ids(f"{dataset_name}_all")
+    print(f"[6] عينة من doc_ids: {doc_ids[:5]} (كلها من نوع: {type(doc_ids[0])})")
+
+    print("[7] تحميل الفهرس المعكوس...")
+    inverted_index = load_inverted_index(dataset_name)
+    print(f"[8] عدد المفاتيح في الفهرس المعكوس: {len(inverted_index)}")
+
+    matched_tokens = [t for t in tokens if t in inverted_index]
+    print(f"[9] التوكنز الموجودة في الفهرس المعكوس: {matched_tokens}")
+
+    if not matched_tokens:
+        print("[!] لم تُوجد كلمات من الاستعلام في الفهرس المعكوس. إرجاع نتيجة فارغة.")
+        return OrderedDict()
+
+    candidate_doc_ids = set()
+    for token in matched_tokens:
+        candidate_doc_ids.update(inverted_index[token])
+    print(f"[10] عدد الوثائق المرشحة بعد الفحص: {len(candidate_doc_ids)}")
+
+    # بناء قاموس للمطابقة بين doc_id و index، بدون تحويل إلى str (لأن doc_ids هي أعداد صحيحة)
+    doc_id_to_index = {doc_id: idx for idx, doc_id in enumerate(doc_ids)}
+    print(f"[11] تم بناء قاموس للمطابقة بين doc_id و index.")
+
+    print("🔍 عينة من candidate_doc_ids (فهرس معكوس):", list(candidate_doc_ids)[:10])
+    print("🔍 عينة من doc_ids المحملة:", doc_ids[:10])
+
+    missing_doc_ids = [doc_id for doc_id in candidate_doc_ids if doc_id not in doc_id_to_index]
+    print(f"🔍 عدد doc_ids في الفهرس المعكوس غير موجودة في doc_id_to_index: {len(missing_doc_ids)}")
+    if missing_doc_ids:
+        print("🔍 عينة منها:", missing_doc_ids[:10])
+
+    candidate_indices = [doc_id_to_index[doc_id] for doc_id in candidate_doc_ids if doc_id in doc_id_to_index]
+    print(f"[12] عدد مؤشرات الوثائق المرشحة بعد المطابقة: {len(candidate_indices)}")
+
+    if not candidate_indices:
+        print("[!] لا توجد مؤشرات لوثائق مطابقة. إرجاع نتيجة فارغة.")
+        return OrderedDict()
+
+    candidate_indices = sorted(candidate_indices)
+    candidate_vectors = tfidf_matrix[candidate_indices]
+    print(f"[13] تم استخراج تمثيلات TF-IDF للوثائق المرشحة. الشكل: {candidate_vectors.shape}")
+
+    similarity_scores = cosine_similarity(query_vector, candidate_vectors).flatten()
+    print(f"[14] تم حساب درجات التشابه. عدد الدرجات: {len(similarity_scores)}")
+
+    ranking = {
+        doc_ids[i]: float(score)
+        for i, score in zip(candidate_indices, similarity_scores)
+        if score >= similarity_threshold
+    }
+    print(f"[15] عدد الوثائق بعد تطبيق عتبة التشابه ({similarity_threshold}): {len(ranking)}")
+
+    sorted_ranking = sorted(ranking.items(), key=lambda x: x[1], reverse=True)
+
+    if top_k:
+        sorted_ranking = sorted_ranking[:top_k]
+    print(f"[16] عرض أعلى {top_k if top_k else 'الكل'} نتائج مرتبة:")
+
+    for rank, (doc_id, score) in enumerate(sorted_ranking[:5], 1):
+        print(f"    {rank}. Doc ID: {doc_id}, Score: {score:.6f}")
+
+    return OrderedDict(sorted_ranking)
     print("[1] بدء معالجة الاستعلام...")
     qp = QueryProcessor(dataset_name)
     query_vector, tokens = qp.process(query)
