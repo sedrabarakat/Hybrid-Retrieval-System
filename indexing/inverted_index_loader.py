@@ -16,7 +16,6 @@ def load_inverted_index(dataset_name: str):
 
     # التحقق من وجود الملف
     if not os.path.exists(path):
-        raise FileNotFoundError(f"❌ لم يتم العثور على الفهرس المعكوس في: {path}")
+        raise FileNotFoundError(f"لم يتم العثور على الفهرس المعكوس: {path}")
     
-    # تحميل الفهرس
     return joblib.load(path)
