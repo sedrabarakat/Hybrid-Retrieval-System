@@ -73,6 +73,7 @@ def load_doc_ids(file_suffix, vectorizer_type="tfidf"):
     if not os.path.exists(path):
         raise FileNotFoundError(f"Document IDs file not found at: {path}")
     doc_ids = joblib.load(path)
+
     # إرجاع القائمة كما هي بدون تحويل إلى سترينغ
     return doc_ids
 
