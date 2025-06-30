@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="misc">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/nltk_data/nltk_data/misc/mwa_ppdb.zip!/" />
+      <root url="jar://$PROJECT_DIR$/nltk_data/nltk_data/misc/perluniprops.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

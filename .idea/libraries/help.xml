@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="help">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/nltk_data/nltk_data/help/tagsets.zip!/" />
+      <root url="jar://$PROJECT_DIR$/nltk_data/nltk_data/help/tagsets_json.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
