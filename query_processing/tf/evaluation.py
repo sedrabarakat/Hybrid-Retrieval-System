@@ -1,24 +1,25 @@
 from pathlib import Path
 import sys
-import os
-
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
-import time  
+sys.path.append(str(Path(__file__).parents[2]))
 import json
 from typing import Dict
 import mysql.connector
 import ir_measures
 from ir_measures import AP, P, R, RR
-from tf.ranking import match_and_rank
-from embedding.embadding_ranking import match_and_rank_embedding
+from ranking import match_and_rank
+
+
 def get_qrels_path(dataset_name: str) -> str:
+    """
+    يرجع مسار ملف qrels حسب اسم الداتاسيت.
+    عدّل المسارات هنا إذا أضفت داتاسيت جديد.
+    """
     paths = {
         "antique": r"C:\Users\HP\IR-project\dataBases\antique_qrels.tsv",
         "beir": r"C:\Users\HP\IR-project\dataBases\beir_qrels.tsv",
     }
     return paths.get(dataset_name, None)
+
 
 def get_queries_from_db(dataset_name: str):
     conn = mysql.connector.connect(
@@ -29,13 +30,14 @@ def get_queries_from_db(dataset_name: str):
     )
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT query_id, query_text FROM queries WHERE dataset_name = %s  ",
+        "SELECT query_id, query_text FROM queries WHERE dataset_name = %s ",
         (dataset_name,)
     )
     rows = cursor.fetchall()
     queries_corpus = {str(row[0]): row[1] for row in rows}
     conn.close()
     return queries_corpus
+
 
 def get_qrels_from_file(path: str):
     qrels_corpus = []
@@ -47,16 +49,16 @@ def get_qrels_from_file(path: str):
                 qrels_corpus.append((query_id, doc_id, int(relevance)))
     return qrels_corpus
 
+
 def build_ground_truth(queries_corpus, qrels_corpus):
     ground_truth = {}
     for query_id in queries_corpus.keys():
-        relevant_docs = [
-            (doc_id, relevance)
-            for q_id, doc_id, relevance in qrels_corpus
-            if q_id == query_id
-        ]
+        relevant_docs = [(doc_id, relevance) 
+                         for q_id, doc_id, relevance in qrels_corpus 
+                         if q_id == query_id]
         ground_truth[query_id] = dict(relevant_docs)
     return ground_truth
+
 
 def load_doc_id_mapping(dataset_name):
     conn = mysql.connector.connect(
@@ -69,33 +71,24 @@ def load_doc_id_mapping(dataset_name):
     cursor.execute("""
         SELECT id, document_id
         FROM documents
-        WHERE dataset_name = %s 
+        WHERE dataset_name = %s
     """, (dataset_name,))
     rows = cursor.fetchall()
     conn.close()
+
     mapping = {int(row['id']): str(row['document_id']) for row in rows}
     return mapping
 
-def get_search_results(dataset_name: str, method="tf"):
+
+def get_search_results(dataset_name: str):
     search_results = {}
     queries_corpus = get_queries_from_db(dataset_name)
-    qrels_corpus = get_qrels_from_file(get_qrels_path(dataset_name))
-    qrels_query_ids = set(q_id for q_id, _, _ in qrels_corpus)
 
     doc_id_mapping = load_doc_id_mapping(dataset_name)
 
-    for query_id, query_text in queries_corpus.items():
-        if query_id not in qrels_query_ids:
-            continue
-
-        print(f"Evaluating query {query_id}")
-
-        if method == "tf":
-            results = match_and_rank(query_text, dataset_name)
-        elif method == "embedding":
-            results = match_and_rank_embedding(query_text, dataset_name, similarity_threshold=0.3)
-        else:
-            raise ValueError(f"Unsupported method: {method}")
+    for query_id, query in queries_corpus.items():
+        print(f'Evaluating query {query_id}')
+        results = match_and_rank(query, dataset_name)
 
         converted_results = {}
         for doc_pk, score in results.items():
@@ -109,10 +102,8 @@ def get_search_results(dataset_name: str, method="tf"):
 
     return search_results
 
-def run_evaluation(dataset_name: str, method="tf"):
-    import time
-    start_time = time.time()  # ⏱️ بداية التوقيت
 
+def run_evaluation(dataset_name: str):
     qrels_path = get_qrels_path(dataset_name)
     if qrels_path is None:
         print(f"[!] لا يوجد qrels محدد للداتاسيت: {dataset_name}")
@@ -122,9 +113,14 @@ def run_evaluation(dataset_name: str, method="tf"):
     qrels_corpus = get_qrels_from_file(qrels_path)
 
     ground_truth = build_ground_truth(queries_corpus, qrels_corpus)
-    search_results = get_search_results(dataset_name, method=method)
+    search_results = get_search_results(dataset_name)
 
-    measures = [AP, R@10, P@10, RR]
+    measures = [
+        AP,
+        R@10,
+        P@10,
+        RR
+    ]
 
     results = ir_measures.calc_aggregate(
         measures,
@@ -136,18 +132,16 @@ def run_evaluation(dataset_name: str, method="tf"):
     for metric, value in results.items():
         print(f"{metric}: {value:.4f}")
 
-    # ⏱️ حساب الزمن المستغرق
-    elapsed_time = time.time() - start_time
-    print(f"⏱️ زمن التنفيذ: {elapsed_time:.2f} ثانية")
+    # حفظ النتائج إلى ملف JSON
+    output_path = f"evaluation_results_tf_{dataset_name}.json"
 
-    # تخزين النتائج مع زمن التنفيذ
-    output_path = f"evaluation_results_{method}_{dataset_name}.json"
-    results_json = {
-        str(metric): value for metric, value in results.items()
-    }
-    results_json["execution_time_sec"] = round(elapsed_time, 2)
+    # نحول المفاتيح إلى string لأن بعض أنواع المفاتيح (مثل Measure) لا تُخزَّن مباشرة في JSON
+    results_json = {str(metric): value for metric, value in results.items()}
 
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(results_json, f, indent=4, ensure_ascii=False)
 
     print(f"✅ تم حفظ نتائج التقييم في الملف: {output_path}")
+    
+   
+   

@@ -21,9 +21,9 @@ def save_vectorizer(model, name: str, vectorizer_type: str = "tfidf"):
 # تحميل الـ vectorizer
 def load_vectorizer(name: str, vectorizer_type: str = "tfidf"):
     path = os.path.join(BASE_PATH, vectorizer_type, f"{name}_vectorizer.joblib")
-    print(f"Loading vectorizer from: {path}")
+    
     model = joblib.load(path)
-    print(f"Loaded object type: {type(model)}")
+    
     return model
 
 # حفظ مصفوفة TF-IDF بصيغة sparse
@@ -45,7 +45,10 @@ def save_embeddings(array, name: str, vectorizer_type: str = "embedding"):
 def load_embeddings(name: str, vectorizer_type: str = "embedding"):
     path = os.path.join(BASE_PATH, vectorizer_type, f"{name}_embeddings.npy")
     return np.load(path)
-
+    
+def load_embeddings_joblib(name: str, vectorizer_type: str = "embedding"):
+    path = os.path.join(BASE_PATH, vectorizer_type, f"{name}_embeddings.joblib")
+    return joblib.load(path)
 # حفظ hybrid
 def save_hybrid(array, name: str, vectorizer_type: str = "Hybrid"):
     path = os.path.join(_get_dir(vectorizer_type), f"{name}_hybrid.joblib")
@@ -61,12 +64,6 @@ def save_doc_ids(doc_ids, file_suffix, vectorizer_type="tfidf"):
     path = os.path.join(_get_dir(vectorizer_type), f"{file_suffix}_doc_ids.joblib")
     joblib.dump(doc_ids, path)
 
-# # تحميل معرّفات المستندات
-# def load_doc_ids(file_suffix, vectorizer_type="tfidf"):
-#     path = os.path.join(BASE_PATH, vectorizer_type, f"{file_suffix}_doc_ids.joblib")
-#     if not os.path.exists(path):
-#         raise FileNotFoundError(f"Document IDs file not found at: {path}")
-#     return joblib.load(path)
 
 def load_doc_ids(file_suffix, vectorizer_type="tfidf"):
     path = os.path.join(BASE_PATH, vectorizer_type, f"{file_suffix}_doc_ids.joblib")
@@ -77,4 +74,12 @@ def load_doc_ids(file_suffix, vectorizer_type="tfidf"):
     # إرجاع القائمة كما هي بدون تحويل إلى سترينغ
     return doc_ids
 
-  
+def load_tfidf_vectorizer(name):
+    path = os.path.join(
+        "c:\\Users\\HP\\IR-project\\vectorize\\saved_models\\tfidf",
+        f"{name}_vectorizer.joblib"
+    )
+    
+    vectorizer = joblib.load(path)
+    
+    return vectorizer

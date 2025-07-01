@@ -33,6 +33,9 @@ class QueryProcessor:
         processed_query_text = " ".join(tokens)
         query_vec = self.vectorizer.transform([processed_query_text])
         return query_vec, tokens
+    
+
+    
 def process(dataset_name: str, query_text: str):
     qp = QueryProcessor(dataset_name)
     return qp.process(query_text)

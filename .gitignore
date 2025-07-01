@@ -4,6 +4,7 @@ nltk_data/
 # تجاهل مجلدات كبيرة
 vectorize/saved_models/
 indexing/saved_models/
+vector_store/vector_store_index
 
 # تجاهل كل ملفات .joblib و .npz في المشروع
 *.joblib
