@@ -4,7 +4,7 @@ from typing import List, Dict, Any
 
 def fetch_documents(dataset_name: str, skip: int, limit: int) -> List[Dict[str, Any]]:
     """Fetch a batch of documents from the API."""
-    url = f"http://localhost:8000/database/build-save-vectorizer?dataset_name={dataset_name}&skip={skip}&limit={limit}"
+    url = f"http://localhost:8000/database/processed_text?dataset_name={dataset_name}&skip={skip}&limit={limit}"
     response = requests.get(url)
     response.raise_for_status()  # Raises exception for 4XX/5XX status codes
     return response.json()

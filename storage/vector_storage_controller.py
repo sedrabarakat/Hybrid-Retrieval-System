@@ -72,55 +72,88 @@ async def save_tfidf_matrix(request: MatrixRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/save_hybrid/")
-async def save_hybrid(request: HybridRequest):
-    try:
-        data = base64.b64decode(request.data.encode('utf-8'))
-        hybrid = pickle.loads(data)
+class LoadDocIdsResponse(BaseModel):
+    doc_ids: List[int]
+
+class LoadVectorizerResponse(BaseModel):
+    vectorizer_data: str  # base64 encoded serialized vectorizer
+
+@router.get("/load_doc_ids/{name}", response_model=LoadDocIdsResponse)
+async def load_doc_ids_api(
+    name: str, 
+    vectorizer_type: str = "tfidf"
+):
+    """
+    Load document IDs from storage
+    
+    Args:
+        name: Base name of the file (without _doc_ids.joblib suffix)
+        vectorizer_type: Subdirectory name (default: "tfidf")
         
-        path = os.path.join(_get_dir(request.vectorizer_type), f"{request.name}_hybrid.joblib")
-        joblib.dump(hybrid, path, compress=3)
-            
-        return {"status": "success"}
+    Returns:
+        List of document IDs
+    """
+    try:
+        path = os.path.join(_get_dir(vectorizer_type), f"{name}_doc_ids.joblib")
+        if not os.path.exists(path):
+            raise HTTPException(status_code=404, detail=f"Document IDs file not found at: {path}")
+        
+        doc_ids = joblib.load(path)
+        return {"doc_ids": doc_ids}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/download_tfidf/{name}")
-async def download_tfidf_api(name: str):
-    base_name = name.replace('_tfidf', '')
-    path = os.path.join("saved_models", "tfidf", f"{base_name}_tfidf.npz")
-    if not os.path.exists(path):
-        raise HTTPException(status_code=404, detail=f"File not found: {path}")
-    return FileResponse(path, media_type="application/octet-stream", filename=f"{base_name}_tfidf.npz")
+@router.get("/load_vectorizer/{name}", response_model=LoadVectorizerResponse)
+async def load_vectorizer_api(
+    name: str, 
+    vectorizer_type: str = "tfidf"
+):
+    """
+    Load a vectorizer from storage
     
-@router.get("/load_embeddings/{name}")
-async def load_embeddings_api(name: str, vectorizer_type: str = "embedding"):
-    try:
-        path = os.path.join(_get_dir(vectorizer_type), f"{name}_embeddings.npy")
-        embeddings = np.load(path)
-        return {"data": embeddings.tolist()}
-    except Exception as e:
-        raise HTTPException(status_code=404, detail=str(e))
-
-@router.get("/load_hybrid/{name}")
-async def load_hybrid_api(name: str, vectorizer_type: str = "Hybrid"):
-    try:
-        path = os.path.join(_get_dir(vectorizer_type), f"{name}_hybrid.joblib")
-        hybrid = joblib.load(path)
+    Args:
+        name: Base name of the file (without _vectorizer.joblib suffix)
+        vectorizer_type: Subdirectory name (default: "tfidf")
         
-        if scipy.sparse.issparse(hybrid):
-            hybrid_coo = hybrid.tocoo()
-            return {
-                "data": hybrid_coo.data.tolist(),
-                "row": hybrid_coo.row.tolist(),
-                "col": hybrid_coo.col.tolist(),
-                "shape": hybrid_coo.shape,
-                "is_sparse": True
-            }
-        else:
-            return {
-                "data": hybrid.tolist(),
-                "is_sparse": False
-            }
+    Returns:
+        Base64 encoded serialized vectorizer
+    """
+    try:
+        path = os.path.join(_get_dir(vectorizer_type), f"{name}_vectorizer.joblib")
+        if not os.path.exists(path):
+            raise HTTPException(status_code=404, detail=f"Vectorizer file not found at: {path}")
+        
+        with open(path, "rb") as f:
+            vectorizer_data = base64.b64encode(f.read()).decode('utf-8')
+        
+        return {"vectorizer_data": vectorizer_data}
     except Exception as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+    
+    from fastapi.responses import FileResponse
+from fastapi import Query
+
+@router.get("/load_tfidf_matrix/{name}")
+async def load_tfidf_matrix_api(
+    name: str,
+    vectorizer_type: str = Query("tfidf", description="Subdirectory name, e.g., 'tfidf'")
+):
+    """
+    Download the saved TF-IDF matrix (.npz file) from storage.
+
+    Args:
+        name: Base name of the file (without _tfidf.npz suffix)
+        vectorizer_type: Subdirectory name (default: "tfidf")
+
+    Returns:
+        FileResponse to download the .npz file
+    """
+    try:
+        path = os.path.join(_get_dir(vectorizer_type), f"{name}_matrix.pkl")
+        if not os.path.exists(path):
+            raise HTTPException(status_code=404, detail=f"TF-IDF matrix file not found at: {path}")
+
+        return FileResponse(path, media_type="application/octet-stream", filename=f"{name}_matrix.pkl")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

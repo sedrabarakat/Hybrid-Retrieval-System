@@ -2,12 +2,13 @@ import shutil
 import os
 import nltk
 
-# حدد مسار مجلد nltk_data عندك (ممكن تعدله إذا عندك مسار مختلف)
+# مسار مجلد nltk_data
 nltk_data_path = os.path.expanduser(r"~\AppData\Roaming\nltk_data")
 
-# المجلدات اللي بدنا نمسحها لإعادة التنزيل
+# الموارد التي سيتم حذفها
 folders_to_remove = [
     'corpora/wordnet',
+    'corpora/omw-1.4',
     'taggers/averaged_perceptron_tagger',
     'tokenizers/punkt',
     'corpora/stopwords'
@@ -21,11 +22,13 @@ for folder in folders_to_remove:
     else:
         print(f"Not found, skipping: {full_path}")
 
-# نزل الموارد من جديد
+# التأكد أن nltk سيستخدم هذا المسار
+if nltk_data_path not in nltk.data.path:
+    nltk.data.path.append(nltk_data_path)
+
+# إعادة تنزيل الموارد
 print("\nDownloading NLTK resources:")
-nltk.download('wordnet')
-nltk.download('averaged_perceptron_tagger')
-nltk.download('punkt')
-nltk.download('stopwords')
+for pkg in ['wordnet', 'omw-1.4', 'averaged_perceptron_tagger', 'punkt', 'stopwords']:
+    nltk.download(pkg, download_dir=nltk_data_path)
 
 print("\nDone!")
