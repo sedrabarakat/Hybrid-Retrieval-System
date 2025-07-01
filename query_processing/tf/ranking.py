@@ -9,7 +9,8 @@ from collections import OrderedDict
 from sklearn.metrics.pairwise import cosine_similarity
 from storage.vector_storage import load_tfidf_matrix, load_doc_ids
 from indexing.inverted_index_loader import load_inverted_index
-from query_processing import QueryProcessor
+from tf.query_processing import QueryProcessor
+
 import mysql.connector
 
 class IndexDataLoader:
@@ -38,7 +39,36 @@ class IndexDataLoader:
 
 index_loader = IndexDataLoader()
 
-def load_documents_text(dataset_name, doc_ids):
+def load_documents_text(dataset_name, doc_ids, batch_size=1000):
+    import mysql.connector
+
+    conn = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="",
+        database="ir"
+    )
+    cursor = conn.cursor(dictionary=True)
+
+    all_rows = []
+
+    for i in range(0, len(doc_ids), batch_size):
+        batch_ids = doc_ids[i:i+batch_size]
+
+        placeholders = ','.join(['%s'] * len(batch_ids))
+        query = f"""
+            SELECT id, text
+            FROM documents
+            WHERE id IN ({placeholders})
+              AND dataset_name = %s
+        """
+
+        cursor.execute(query, (*batch_ids, dataset_name))
+        rows = cursor.fetchall()
+        all_rows.extend(rows)
+
+    conn.close()
+    return all_rows
    
     if not doc_ids:
         return {}
@@ -123,15 +153,15 @@ def match_and_rank(query: str, dataset_name: str, similarity_threshold=0.0001, t
 
     # تحميل نصوص المستندات من قاعدة البيانات
     top_doc_ids = [doc_id for doc_id, _ in sorted_ranking]
-    documents_texts = load_documents_text(dataset_name, top_doc_ids)
+    # documents_texts = load_documents_text(dataset_name, top_doc_ids)
 
     print(f"[14] عرض أعلى {top_k if top_k else 'الكل'} نتائج مرتبة مع محتوى الوثائق:")
     for rank, (doc_id, score) in enumerate(sorted_ranking[:5], 1):
-        text = documents_texts.get(doc_id, "[النص غير موجود]")
+        # text = documents_texts.get(doc_id, "[النص غير موجود]")
         print(f"🔹 Rank: {rank}")
         print(f"   Doc ID: {doc_id}")
         print(f"   Score: {score:.6f}")
-        print(f"   Text: {text[:200]}...")
+        # print(f"   Text: {text[:200]}...")
         print("-" * 50)
 
     return OrderedDict(sorted_ranking)
