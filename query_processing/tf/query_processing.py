@@ -9,7 +9,6 @@ from text_processing.text_preprocessing import get_preprocessed_text_terms
 
 
 class QueryProcessor:
-    # ✅ الكاش هنا كـ attributes للكلاس
     _cache_vectorizers = {}
     _cache_doc_ids = {}
 
@@ -20,7 +19,6 @@ class QueryProcessor:
         self.dataset_name = dataset_name
         file_prefix = f"{dataset_name}_all"
 
-        # ✅ نحمّل من الكاش إذا موجود
         if dataset_name in QueryProcessor._cache_vectorizers:
             print(f"[CACHE] Using cached vectorizer for {dataset_name}")
 
@@ -30,7 +28,7 @@ class QueryProcessor:
 
             vectorizer = load_vectorizer(file_prefix)
 
-            # تعديل tokenizer
+            #tokenizer
             def tokenizer_no_arg(text):
                 return get_preprocessed_text_terms(
                     text,
@@ -38,11 +36,11 @@ class QueryProcessor:
                 )
             vectorizer.tokenizer = tokenizer_no_arg
 
-            # خزّنه في الكاش
+            # caching
             QueryProcessor._cache_vectorizers[dataset_name] = vectorizer
             self.vectorizer = vectorizer
 
-        # ✅ نحمّل doc_ids من الكاش إذا موجود
+        # loading ids from cache
         if dataset_name in QueryProcessor._cache_doc_ids:
             self.doc_ids = QueryProcessor._cache_doc_ids[dataset_name]
         else:

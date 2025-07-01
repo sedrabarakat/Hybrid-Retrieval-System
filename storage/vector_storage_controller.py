@@ -9,7 +9,7 @@ import base64
 import joblib
 from fastapi.responses import FileResponse
 
-BASE_PATH = "saved_models"
+BASE_PATH = "vectorize\saved_models"
 router = APIRouter(prefix="/storage")
 
 def _get_dir(vectorizer_type: str) -> str:
@@ -149,11 +149,40 @@ async def load_tfidf_matrix_api(
         FileResponse to download the .npz file
     """
     try:
-        path = os.path.join(_get_dir(vectorizer_type), f"{name}_matrix.pkl")
+        path = os.path.join(_get_dir(vectorizer_type), f"{name}_tfidf.npz")
         if not os.path.exists(path):
             raise HTTPException(status_code=404, detail=f"TF-IDF matrix file not found at: {path}")
 
-        return FileResponse(path, media_type="application/octet-stream", filename=f"{name}_matrix.pkl")
+        return FileResponse(path, media_type="application/octet-stream", filename=f"{name}_tfidf.npz")
 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+class LoadDocIdsResponse(BaseModel):
+    doc_ids: List[int]
+
+@router.get("/load_doc_ids/{name}", response_model=LoadDocIdsResponse)
+async def load_doc_ids_api(
+    name: str,
+    vectorizer_type: str = Query("tfidf", description="Subdirectory name, e.g., 'tfidf'")
+):
+    """
+    Load document IDs from storage.
+
+    Args:
+        name: Base name of the file (without '_doc_ids.joblib' suffix)
+        vectorizer_type: Subdirectory name (default: 'tfidf')
+
+    Returns:
+        List of document IDs
+    """
+    try:
+        path = os.path.join(_get_dir(vectorizer_type), f"{name}_doc_ids.joblib")
+        if not os.path.exists(path):
+            raise HTTPException(status_code=404, detail=f"Document IDs file not found at: {path}")
+
+        doc_ids = joblib.load(path)
+        # Return as list of ints (assuming they are ints)
+        return {"doc_ids": doc_ids}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
