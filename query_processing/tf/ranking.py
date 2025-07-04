@@ -12,6 +12,29 @@ class IndexDataLoader:
     def __init__(self):
         self.cache = {}
 
+    def load_inverted_index_via_api(self, dataset_name):
+        """
+        Load inverted index from API endpoint.
+        """
+        base_url = "http://localhost:8000"  # Adjust if your API runs elsewhere
+        endpoint = "/load_inverted_index/"
+        params = {"dataset_name": dataset_name}
+        
+        try:
+            response = requests.get(base_url + endpoint, params=params, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+            inverted_index = data.get("inverted_index")
+            if inverted_index is None:
+                raise ValueError("No inverted_index found in API response")
+            return inverted_index
+        except requests.RequestException as e:
+            print(f"Error fetching inverted index from API: {e}")
+            raise
+        except Exception as e:
+            print(f"Error processing inverted index: {e}")
+            raise
+
     def load_tfidf_matrix_via_api(self, dataset_name):
         """
         Load TF-IDF matrix from API endpoint as a temporary file and read it.
@@ -76,7 +99,7 @@ class IndexDataLoader:
         try:
             tfidf_matrix = self.load_tfidf_matrix_via_api(dataset_name)
             doc_ids = self.load_doc_ids_via_api(f"{dataset_name}_all", vectorizer_type="tfidf")
-            inverted_index = load_inverted_index(dataset_name)
+            inverted_index = self.load_inverted_index_via_api(dataset_name)
 
             self.cache[dataset_name] = {
                 'tfidf_matrix': tfidf_matrix,
