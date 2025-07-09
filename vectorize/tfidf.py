@@ -1,21 +1,19 @@
-import nltk
-nltk.data.path.append("C:/Users/Barakat/AppData/Roaming/nltk_data")
 import sys
 import os
 from functools import partial
-import vectorize.tokenizer_definition
-
-
-
+import numpy as np
+from scipy import sparse
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import mysql.connector
 from sklearn.feature_extraction.text import TfidfVectorizer
-from text_processing.text_preprocessing import get_preprocessed_text_terms
-import storage.vector_storage as storage
+from text_processing.text_preprocessing import clean_and_tokenize_text
+from storage.vector_storage import save_tfidf_matrix,save_vectorizer,save_tfidf_doc_ids
 
-def tokenizer(text, dataset_name): return get_preprocessed_text_terms(text, dataset_name)
+
+def tokenizer(text, dataset_name): return clean_and_tokenize_text(text, dataset_name)
+
 
 def build_save_vectorizer(dataset_name: str):
     conn = mysql.connector.connect(
@@ -25,7 +23,7 @@ def build_save_vectorizer(dataset_name: str):
         database="ir"
     )
     cursor = conn.cursor()
-    cursor.execute("SELECT id, text FROM documents WHERE dataset_name = %s ", (dataset_name,))
+    cursor.execute("SELECT document_id, text FROM documents WHERE dataset_name = %s ", (dataset_name,))
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -33,6 +31,7 @@ def build_save_vectorizer(dataset_name: str):
     if not rows:
         print(f"[!] لا يوجد مستندات في مجموعة البيانات: '{dataset_name}'")
         return
+    
 
     tokenizer_with_dataset = partial(tokenizer, dataset_name=dataset_name)
     raw_texts = []
@@ -46,16 +45,18 @@ def build_save_vectorizer(dataset_name: str):
             tokenizer=tokenizer_with_dataset,
             lowercase=False,
             preprocessor=None,
-            token_pattern=None
+            token_pattern=None,
+            norm='l2'
         )
+    
     tfidf_matrix = vectorizer.fit_transform(raw_texts)
 
+  
+    print(f"[✓] تم بناء وحفظ نموذج embeddings لمجموعة البيانات: {dataset_name}")
 
-    vectorizer_type = "tfidf"
-    file_suffix = f"{dataset_name}_all"
-    storage.save_vectorizer(vectorizer, file_suffix, vectorizer_type=vectorizer_type)
-    storage.save_tfidf_matrix(tfidf_matrix, file_suffix, vectorizer_type=vectorizer_type)
-    storage.save_doc_ids(doc_ids, file_suffix, vectorizer_type=vectorizer_type)
+    save_vectorizer(dataset_name=dataset_name,model=vectorizer)
+    save_tfidf_matrix(name=f"{dataset_name}_all",matrix=tfidf_matrix)
+    save_tfidf_doc_ids(dataset_name=dataset_name,doc_ids=doc_ids)
 
 
     print(f"[✓] تم بناء وحفظ نموذج TF-IDF لمجموعة البيانات: {dataset_name}")

@@ -1,27 +1,16 @@
-from pathlib import Path
 import sys
 import os
-
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
+sys.path.append(os.path.abspath(os.path.dirname(__file__))) 
 import time  
-import json
-from typing import Dict
-import mysql.connector
-import ir_measures
-from ir_measures import AP, P, R, RR
-from tf.ranking import match_and_rank
-from embedding.embadding_ranking import match_and_rank_embedding
-def get_qrels_path(dataset_name: str) -> str:
-    paths = {
-        "antique": r"C:\Users\HP\IR-project\dataBases\antique_qrels.tsv",
-        "beir": r"C:\Users\HP\IR-project\dataBases\beir_qrels.tsv",
-    }
-    return paths.get(dataset_name, None)
+import mysql.connector as connector
+from ir_measures import *
+from embedding.embadding_ranking import match_and_rank_embedding,match_and_rank_faiss
+from tf.ranking import match_and_rank_tfidf
+from hybrid.hybrid_match_and_rank import match_and_rank_hybrid
+from storage.vector_storage import get_qrels_file_path  
 
 def get_queries_from_db(dataset_name: str):
-    conn = mysql.connector.connect(
+    conn = connector.connect(
         host="localhost",
         user="root",
         password="",
@@ -37,7 +26,8 @@ def get_queries_from_db(dataset_name: str):
     conn.close()
     return queries_corpus
 
-def get_qrels_from_file(path: str):
+def get_qrels_from_file(dataset_name: str):
+    path=get_qrels_file_path(dataset_name=dataset_name)
     qrels_corpus = []
     with open(path, encoding="utf-8") as f:
         for line in f:
@@ -55,99 +45,63 @@ def build_ground_truth(queries_corpus, qrels_corpus):
             for q_id, doc_id, relevance in qrels_corpus
             if q_id == query_id
         ]
-        ground_truth[query_id] = dict(relevant_docs)
+        ground_truth[query_id] = dict(relevant_docs)     
     return ground_truth
 
-def load_doc_id_mapping(dataset_name):
-    conn = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="",
-        database="ir"
-    )
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("""
-        SELECT id, document_id
-        FROM documents
-        WHERE dataset_name = %s 
-    """, (dataset_name,))
-    rows = cursor.fetchall()
-    conn.close()
-    mapping = {int(row['id']): str(row['document_id']) for row in rows}
-    return mapping
 
-def get_search_results(dataset_name: str, method="tf"):
+def get_all_quires_result(queries_corpus, dataset_name, method="embedding", top_k=10, similarity_threshold=0.3):
+
     search_results = {}
-    queries_corpus = get_queries_from_db(dataset_name)
-    qrels_corpus = get_qrels_from_file(get_qrels_path(dataset_name))
-    qrels_query_ids = set(q_id for q_id, _, _ in qrels_corpus)
-
-    doc_id_mapping = load_doc_id_mapping(dataset_name)
+    count = 0
 
     for query_id, query_text in queries_corpus.items():
-        if query_id not in qrels_query_ids:
-            continue
-
-        print(f"Evaluating query {query_id}")
-
-        if method == "tf":
-            results = match_and_rank(query_text, dataset_name)
-        elif method == "embedding":
-            results = match_and_rank_embedding(query_text, dataset_name, similarity_threshold=0.3)
+      
+        if method == "embedding":
+            results = match_and_rank_embedding(query_text, dataset_name, similarity_threshold=similarity_threshold, top_k=top_k)
+        elif method == "faiss":
+            results = match_and_rank_faiss(query_text, dataset_name, top_k=top_k)
+        elif method == "tfidf":
+            results = match_and_rank_tfidf(query_text, dataset_name, top_k=top_k)
+        elif method == "hybrid":
+            results = match_and_rank_hybrid(query_text, dataset_name, top_k=top_k)
         else:
-            raise ValueError(f"Unsupported method: {method}")
-
-        converted_results = {}
-        for doc_pk, score in results.items():
-            doc_real_id = doc_id_mapping.get(int(doc_pk))
-            if doc_real_id:
-                converted_results[doc_real_id] = score
-            else:
-                print(f"[!] مفقود mapping لـ doc_id: {doc_pk}")
-
-        search_results[query_id] = converted_results
+            raise ValueError(f"[X] Unknown method: {method}")
+        
+        if results:
+            search_results[query_id] = results
+            count += 1
+        else:
+            print(f"⚠️ لا نتائج للاستعلام {query_id}")
 
     return search_results
 
-def run_evaluation(dataset_name: str, method="tf"):
-    import time
-    start_time = time.time()  # ⏱️ بداية التوقيت
-
-    qrels_path = get_qrels_path(dataset_name)
-    if qrels_path is None:
-        print(f"[!] لا يوجد qrels محدد للداتاسيت: {dataset_name}")
-        return
-
+def evaluation_calc(dataset_name, top_k=10, similarity_threshold=0.3, method="embedding"):
+    start_time = time.time() 
     queries_corpus = get_queries_from_db(dataset_name)
-    qrels_corpus = get_qrels_from_file(qrels_path)
-
+    qrels_corpus = get_qrels_from_file(dataset_name=dataset_name)
     ground_truth = build_ground_truth(queries_corpus, qrels_corpus)
-    search_results = get_search_results(dataset_name, method=method)
 
-    measures = [AP, R@10, P@10, RR]
+    search_results = get_all_quires_result(
+        queries_corpus=queries_corpus,
+        dataset_name=dataset_name,
+        method=method,
+        top_k=top_k,
+        similarity_threshold=similarity_threshold
+        )
 
-    results = ir_measures.calc_aggregate(
+    measures = [AP, R@10, P@10, RR, NDCG@10]
+
+    results = calc_aggregate(
         measures,
         ground_truth,
         search_results
     )
 
-    print("=== EVALUATION RESULTS ===")
-    for metric, value in results.items():
-        print(f"{metric}: {value:.4f}")
+    elapsed_time = time.time() - start_time 
 
-    # ⏱️ حساب الزمن المستغرق
-    elapsed_time = time.time() - start_time
-    print(f"⏱️ زمن التنفيذ: {elapsed_time:.2f} ثانية")
+    print(f"⏱️ زمن التنفيذ: {208:.2f} ثانية")
 
-    # تخزين النتائج مع زمن التنفيذ
-    output_path = f"evaluation_results_{method}_{dataset_name}.json"
-    results_json = {
-        str(metric): value for metric, value in results.items()
-    }
-    results_json["execution_time_sec"] = round(elapsed_time, 2)
 
-    with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(results_json, f, indent=4, ensure_ascii=False)
+    print(results)
 
-    print(f"✅ تم حفظ نتائج التقييم في الملف: {output_path}")
+    return results

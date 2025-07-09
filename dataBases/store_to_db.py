@@ -16,7 +16,7 @@ conn = mysql.connector.connect(
 )
 cursor = conn.cursor()
 
-datasets = ["antique", "beir"]
+datasets = ["antique", "beir","qora"]
 
 for dataset_name in datasets:
     corpus = get_corpus(dataset_name)

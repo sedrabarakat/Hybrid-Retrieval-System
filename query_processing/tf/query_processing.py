@@ -1,14 +1,15 @@
 
 import sys
-import vectorize.tokenizer_definition 
+import os
+sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
-sys.modules["TF_IDF"] = vectorize.tokenizer_definition
+from storage.vector_storage import load_vectorizer, load_tfidf_ids
+from text_processing.text_preprocessing import clean_and_tokenize_text
+from vectorize.tokenizer_definition import tokenizer
+from text_processing.text_preprocessing import clean_and_tokenize_text
 
-from storage.vector_storage import load_vectorizer, load_doc_ids
-from text_processing.text_preprocessing import get_preprocessed_text_terms
 
-
-class QueryProcessor:
+class tfidf_query_processor:
     _cache_vectorizers = {}
     _cache_doc_ids = {}
 
@@ -17,44 +18,43 @@ class QueryProcessor:
             raise ValueError(f"Unsupported dataset: {dataset_name}")
 
         self.dataset_name = dataset_name
-        file_prefix = f"{dataset_name}_all"
 
-        if dataset_name in QueryProcessor._cache_vectorizers:
-            print(f"[CACHE] Using cached vectorizer for {dataset_name}")
-
-            self.vectorizer = QueryProcessor._cache_vectorizers[dataset_name]
+         # Load vectorizer
+        if dataset_name in tfidf_query_processor._cache_vectorizers:
+            self.vectorizer = tfidf_query_processor._cache_vectorizers[dataset_name]
         else:
-            print(f"[DISK] Loading vectorizer for {dataset_name}")
-
-            vectorizer = load_vectorizer(file_prefix)
+            vectorizer = load_vectorizer(dataset_name=dataset_name)
 
             #tokenizer
             def tokenizer_no_arg(text):
-                return get_preprocessed_text_terms(
+                return clean_and_tokenize_text(
                     text,
                     dataset_name=self.dataset_name
                 )
             vectorizer.tokenizer = tokenizer_no_arg
 
             # caching
-            QueryProcessor._cache_vectorizers[dataset_name] = vectorizer
+            tfidf_query_processor._cache_vectorizers[dataset_name] = vectorizer
             self.vectorizer = vectorizer
 
         # loading ids from cache
-        if dataset_name in QueryProcessor._cache_doc_ids:
-            self.doc_ids = QueryProcessor._cache_doc_ids[dataset_name]
+        if dataset_name in tfidf_query_processor._cache_doc_ids:
+            self.doc_ids = tfidf_query_processor._cache_doc_ids[dataset_name]
         else:
-            doc_ids = load_doc_ids(file_prefix)
-            QueryProcessor._cache_doc_ids[dataset_name] = doc_ids
+            doc_ids = load_tfidf_ids(dataset_name=dataset_name)
+            tfidf_query_processor._cache_doc_ids[dataset_name] = doc_ids
             self.doc_ids = doc_ids
 
     def process(self, query_text: str):
-        tokens = get_preprocessed_text_terms(query_text, self.dataset_name)
+        tokens = clean_and_tokenize_text(query_text, self.dataset_name)
         processed_query_text = " ".join(tokens)
         query_vec = self.vectorizer.transform([processed_query_text])
         return query_vec, tokens
 
 
 def process(dataset_name: str, query_text: str):
-    qp = QueryProcessor(dataset_name)
+    
+    qp = tfidf_query_processor(dataset_name)
     return qp.process(query_text)
+
+
