@@ -1,14 +1,10 @@
 import faiss
 import numpy as np
 import joblib
-import sys
-import os
-
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+import os,sys
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
-
-
 from storage.vector_storage import  load_embeddings    
 
 def build_vector_func(dataset_name:str):

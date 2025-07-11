@@ -5,6 +5,7 @@ nltk_data/
 vectorize/saved_models/
 indexing/saved_models/
 vector_store/vector_store_index
+torchenv/
 
 # تجاهل كل ملفات .joblib و .npz في المشروع
 *.joblib

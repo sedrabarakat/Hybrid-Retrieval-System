@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hybrid Search Interface</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .search-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .results-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        input, select, button {
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .suggestions {
+            margin-top: 10px;
+        }
+        .suggestion {
+            display: inline-block;
+            margin-right: 10px;
+            margin-bottom: 5px;
+            padding: 5px 10px;
+            background-color: #e9e9e9;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .suggestion:hover {
+            background-color: #ddd;
+        }
+        .result-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        .doc-id {
+            font-weight: bold;
+            color: #333;
+        }
+        .score {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hybrid Search Interface</h1>
+    
+    <div class="search-container">
+        <h2>Search Parameters</h2>
+        <div>
+            <label for="dataset">Dataset:</label>
+            <select id="dataset">
+                <option value="antique">Antique</option>
+                <option value="beir">Beir</option>
+            </select>
+        </div>
+        <div>
+            <label for="query">Query Text:</label>
+            <input type="text" id="query" placeholder="Enter your search query...">
+        </div>
+        <div class="suggestions" id="suggestions">
+            <p>Try these queries:</p>
+            <div class="suggestion" onclick="useSuggestion(this)">What is the capital of France?</div>
+            <div class="suggestion" onclick="useSuggestion(this)">How does photosynthesis work?</div>
+            <div class="suggestion" onclick="useSuggestion(this)">Best programming languages for AI</div>
+            <div class="suggestion" onclick="useSuggestion(this)">History of the Roman Empire</div>
+        </div>
+        <button onclick="performSearch()">Search</button>
+    </div>
+    
+    <div class="results-container">
+        <h2>Search Results</h2>
+        <div id="results">
+            <p>Enter a query and click "Search" to see results.</p>
+        </div>
+    </div>
+
+    <script>
+        const baseUrl = "{{base_url_ir}}";
+        
+        function useSuggestion(element) {
+            document.getElementById('query').value = element.textContent;
+        }
+        
+        async function performSearch() {
+            const query = document.getElementById('query').value;
+            const dataset = document.getElementById('dataset').value;
+            
+            if (!query) {
+                alert('Please enter a query');
+                return;
+            }
+            
+            document.getElementById('results').innerHTML = '<div class="loading">Searching... Please wait.</div>';
+            
+            try {
+                const response = await fetch(`${baseUrl}/hybrid/search/${dataset}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query_text: query })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                displayResults(data);
+            } catch (error) {
+                document.getElementById('results').innerHTML = `<p>Error: ${error.message}</p>`;
+                console.error('Error:', error);
+            }
+        }
+        
+        function displayResults(results) {
+            const resultsContainer = document.getElementById('results');
+            
+            if (Object.keys(results).length === 0) {
+                resultsContainer.innerHTML = '<p>No results found.</p>';
+                return;
+            }
+            
+            let html = '';
+            for (const [docId, score] of Object.entries(results)) {
+                html += `
+                    <div class="result-item">
+                        <div class="doc-id">Document ID: ${docId}</div>
+                        <div class="score">Similarity Score: ${score.toFixed(4)}</div>
+                    </div>
+                `;
+            }
+            
+            resultsContainer.innerHTML = html;
+        }
+        
+ const suggestionCache = {};
+    
+    async function updateSuggestions() {
+        const partialQuery = document.getElementById('query').value;
+        const dataset = document.getElementById('dataset').value;
+        
+        if (partialQuery.length < 2) {
+            document.getElementById('suggestions').innerHTML = '<p>Try these queries:</p>' +
+                '<div class="suggestion" onclick="useSuggestion(this)">What is the capital of France?</div>' +
+                '<div class="suggestion" onclick="useSuggestion(this)">How does photosynthesis work?</div>';
+            return;
+        }
+        
+        // Check cache first
+        const cacheKey = `${dataset}-${partialQuery}`;
+        if (suggestionCache[cacheKey]) {
+            displaySuggestions(suggestionCache[cacheKey]);
+            return;
+        }
+        
+        try {
+            const response = await fetch(`${baseUrl}/hybrid/suggest`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    partial_query: partialQuery,
+                    dataset_name: dataset
+                })
+            });
+            
+            const suggestions = await response.json();
+            suggestionCache[cacheKey] = suggestions;
+            displaySuggestions(suggestions);
+        } catch (error) {
+            console.error('Error getting suggestions:', error);
+        }
+    }
+    
+    function displaySuggestions(suggestions) {
+        const container = document.getElementById('suggestions');
+        if (suggestions.length === 0) {
+            container.innerHTML = '<p>No suggestions found</p>';
+            return;
+        }
+        
+        let html = '<p>Suggestions:</p>';
+        suggestions.forEach(suggestion => {
+            html += `<div class="suggestion" onclick="useSuggestion(this)">${suggestion}</div>`;
+        });
+        container.innerHTML = html;
+    }
+    
+    // Update event listener for the query input
+    document.getElementById('query').addEventListener('input', updateSuggestions);
+</script>
+</body>
+</html>

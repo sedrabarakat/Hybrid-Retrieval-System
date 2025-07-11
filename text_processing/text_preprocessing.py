@@ -9,6 +9,7 @@ from nltk.tokenize import TreebankWordTokenizer
 from nltk import pos_tag
 from textacy import preprocessing
 import spacy
+import unicodedata
 
 # === Global instances for performance ===
 stemmer = PorterStemmer()
@@ -19,36 +20,16 @@ country_codes = {c.alpha_3: c.name for c in pycountry.countries}
 nlp = spacy.load("en_core_web_sm")
 
 chat_words = {
-    "LOL": "laughing out loud",
-    "BRB": "be right back",
-    "GTG": "got to go",
-    "IDK": "i don't know",
-    "IMO": "in my opinion",
-    "IMHO": "in my humble opinion",
-    "FYI": "for your information",
-    "TTYL": "talk to you later",
-    "ASAP": "as soon as possible",
-    "BTW": "by the way",
-    "OMG": "oh my god",
-    "CU": "see you",
-    "U": "you",
-    "UR": "your",
-    "THX": "thanks",
-    "TY": "thank you",
-    "YW": "you're welcome",
-    "NP": "no problem",
-    "ILY": "i love you",
-    "JK": "just kidding",
-    "IDC": "i don't care",
-    "IDK": "i don't know",
-    "AFK": "away from keyboard"
+    "LOL": "laughing out loud", "BRB": "be right back", "GTG": "got to go",
+    "IDK": "i don't know", "IMO": "in my opinion", "IMHO": "in my humble opinion",
+    "FYI": "for your information", "TTYL": "talk to you later", "ASAP": "as soon as possible",
+    "BTW": "by the way", "OMG": "oh my god", "CU": "see you", "U": "you", "UR": "your",
+    "THX": "thanks", "TY": "thank you", "YW": "you're welcome", "NP": "no problem",
+    "ILY": "i love you", "JK": "just kidding", "IDC": "i don't care", "AFK": "away from keyboard"
 }
 
-def _chat_conversion(text):
-    new_text = []
-    for word in text.split():
-        new_text.append(chat_words.get(word.upper(), word))
-    return " ".join(new_text)
+def _chat_conversion(text: str) -> str:
+    return " ".join([chat_words.get(w.upper(), w) for w in text.split()])
 
 def _get_words_tokenize(text: str) -> list:
     return tokenizer.tokenize(text)
@@ -59,17 +40,18 @@ def _remove_stop_words(tokens: list) -> list:
 def _stem_tokens(tokens: list) -> list:
     return [stemmer.stem(token) for token in tokens]
 
-def _get_wordnet_pos(treebank_tag):
-    if treebank_tag.startswith('J'):
-        return 'a'
-    elif treebank_tag.startswith('V'):
-        return 'v'
-    elif treebank_tag.startswith('N'):
-        return 'n'
-    elif treebank_tag.startswith('R'):
-        return 'r'
+def _get_wordnet_pos(tag: str) -> str:
+    if tag.startswith("J"):
+        return "a"
+    elif tag.startswith("V"):
+        return "v"
+    elif tag.startswith("N"):
+        return "n"
+    elif tag.startswith("R"):
+        return "r"
     else:
-        return 'n'
+        return "n"
+
 
 def _lemmatize_tokens(tokens: list) -> list:
     tagged_tokens = pos_tag(tokens)
@@ -114,4 +96,44 @@ def get_preprocessed_text_terms(text: str, dataset_name: str) -> list:
     return tokens
 
 __all__ = ['get_preprocessed_text_terms']
+
+
+
+
+def clean_and_tokenize_text(text: str, dataset_name: str = "beir", is_query: bool = False) -> list:
+    if not text or not text.strip():
+        return []
+
+    text = _chat_conversion(text)
+    text = unicodedata.normalize("NFKD", text)
+    text = re.sub(r"<[^>]+>", " ", text)
+    text = re.sub(r"\[.*?\]", " ", text)
+    text = re.sub(r"http\S+|www\S+", " ", text)
+    text = re.sub(r"[^\x00-\x7F]+", " ", text)
+    text = re.sub(r"[\r\n\t]", " ", text)
+    text = re.sub(r"\b([a-zA-Z]+)-([a-zA-Z]+)\b", r"\1\2", text)  # Merge hyphenated words
+    text = re.sub(r"\s+", " ", text).strip()
+
+    if dataset_name.lower() == "beir":
+        text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("utf-8")
+
+    text = re.sub(rf"[{re.escape(string.punctuation.replace('?', '').replace('!', ''))}]", "", text)
+
+    if is_query:
+        text = text.replace("?", "").replace("!", "")
+
+    tokens = tokenizer.tokenize(text.lower())
+
+    important_stops = {"not", "is", "are", "do", "does", "did", "what", "who", "how", "why", "when", "where",
+                       "could", "should", "would", "can", "may", "also", "must", "still"}
+    tokens = [t for t in tokens if t not in stop_words or t in important_stops]
+
+    tokens = [t for t in tokens if not t.isdigit()]
+    tokens = [t for t in tokens if len(t) > 2 or t in important_stops]
+
+    tagged_tokens = pos_tag(tokens)
+    tokens = [lemmatizer.lemmatize(t, _get_wordnet_pos(tag)) for t, tag in tagged_tokens]
+
+    return tokens
+
 

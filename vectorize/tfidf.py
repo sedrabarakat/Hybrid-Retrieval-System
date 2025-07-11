@@ -176,7 +176,8 @@ def build_tfidf_model(dataset_name: str) -> Optional[Tuple[TfidfVectorizer, csr_
             tokenizer=tokenizer,
             lowercase=False,
             preprocessor=None,
-            token_pattern=None
+            token_pattern=None,
+            norm='l2'
         )
         matrix = vectorizer.fit_transform(texts)
         return vectorizer, matrix
