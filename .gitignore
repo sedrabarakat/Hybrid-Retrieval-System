@@ -1,0 +1,26 @@
+# تجاهل مجلد nltk_data بالكامل
+nltk_data/
+
+# تجاهل مجلدات كبيرة
+vectorize/saved_models/
+indexing/saved_models/
+vector_store/vector_store_index
+torchenv/
+
+# تجاهل كل ملفات .joblib و .npz في المشروع
+*.joblib
+*.npz
+
+# تجاهل ملفات TSV داخل مجلد dataBases
+dataBases/*.tsv
+dataBases/beir_qrels.tsv
+
+# ملفات بايثون المؤقتة ومجلدات أخرى
+__pycache__/
+*.pyc
+.env
+
+# تجاهل كل الملفات داخل مجلدات saved_models بشكل عميق
+vectorize/saved_models/**/*
+indexing/saved_models/**/*
+.idea/
