@@ -8,11 +8,11 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import mysql.connector
 from sklearn.feature_extraction.text import TfidfVectorizer
-from text_processing.text_preprocessing import clean_and_tokenize_text
+from text_processing.text_preprocessing import get_preprocessed_text_terms
 from storage.vector_storage import save_tfidf_matrix,save_vectorizer,save_tfidf_doc_ids
 
 
-def tokenizer(text, dataset_name): return clean_and_tokenize_text(text, dataset_name)
+def tokenizer(text, dataset_name): return get_preprocessed_text_terms(text, dataset_name)
 
 
 def build_save_vectorizer(dataset_name: str):
