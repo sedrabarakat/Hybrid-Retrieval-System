@@ -39,10 +39,12 @@ def build_inverted_index_tfidf(dataset_name: str):
             real_doc_id = doc_ids[row_idx]
             inverted_index[term].append((real_doc_id, float(tfidf_value)))
 
-    output_folder = r"C:\Users\HP\IR-project\indexing\saved_models\inverted_index"
-    os.makedirs(output_folder, exist_ok=True)
+    # حفظ الفهرس بنفس مجلد الملف
+    output_folder = os.path.dirname(__file__)
     index_path = os.path.join(output_folder, f"{dataset_name}_inverted_index.joblib")
+
     joblib.dump(dict(inverted_index), index_path, compress=3)
+
 
     print(f"[✓] تم بناء وحفظ الفهرس المعكوس بـ TF-IDF لمجموعة البيانات: {dataset_name}")
     # طباعة أول 5 كلمات كعينات
