@@ -3,7 +3,6 @@ import os
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
-
 from query_processing.tf.query_processing import tfidf_query_processor
 from query_processing.embedding.embedding_query_processing import EmbeddingQueryProcessor
 from sklearn.preprocessing import normalize
