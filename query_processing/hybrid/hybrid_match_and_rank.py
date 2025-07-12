@@ -5,7 +5,7 @@ sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 from collections import OrderedDict
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
-from hybrid.hybrid_query_process import process_hybrid_query
+from .hybrid_query_process import process_hybrid_query
 from storage.vector_storage import load_hyprid_ids
 from vectorize.hybrid import generate_hybrid
 
