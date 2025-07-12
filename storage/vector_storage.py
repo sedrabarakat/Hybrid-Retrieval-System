@@ -104,3 +104,31 @@ def load_tfidf_vectorizer(name):
     vectorizer = joblib.load(path)
     
     return vectorizer
+
+def save_clusters(clusters_array, name: str, vectorizer_type: str = "tfidf"):
+    """
+    يحفظ مصفوفة التجميع (clusters array) كملف numpy.
+    """
+    path = os.path.join(_get_dir(vectorizer_type), f"{name}_clusters.npy")
+    print(f"Saving clusters array to: {path}")
+    np.save(path, clusters_array)
+    print("Clusters array saved successfully.")
+
+def load_clusters(name: str, vectorizer_type: str = "tfidf"):
+    """
+    يحمل مصفوفة التجميع (clusters array) من ملف numpy.
+    """
+    path = os.path.join(BASE_PATH, vectorizer_type, f"{name}_clusters.npy")
+    print(f"Attempting to load clusters array from: {path}")
+    start_time = time.time()
+    try:
+        clusters_array = np.load(path)
+        end_time = time.time()
+        print(f"Clusters array loaded successfully in {end_time - start_time:.2f} seconds. Shape: {clusters_array.shape}")
+        return clusters_array
+    except FileNotFoundError:
+        print(f"Error: Clusters array file not found at {path}")
+        raise
+    except Exception as e:
+        print(f"Error loading clusters array: {e}")
+        raise
