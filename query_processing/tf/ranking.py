@@ -5,7 +5,7 @@ import numpy as np
 from collections import OrderedDict
 from sklearn.metrics.pairwise import cosine_similarity
 from indexing.inverted_index_loader import load_inverted_index
-from tf.query_processing import QueryProcessor
+from .query_processing import tfidf_query_processor as QueryProcessor
 import tempfile
 
 class IndexDataLoader:
