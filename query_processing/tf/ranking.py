@@ -5,7 +5,7 @@ sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
 from storage.vector_storage import load_tfidf_matrix
 from indexing.inverted_index_loader import load_inverted_index
-from tf.query_processing import tfidf_query_processor
+from query_processing.tf.query_processing import tfidf_query_processor
 from sklearn.metrics.pairwise import cosine_similarity
 from collections import OrderedDict
 import numpy as np
