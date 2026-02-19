@@ -11,6 +11,7 @@ from text_processing.text_preprocessing import get_preprocessed_text_terms
 conn = mysql.connector.connect(
     host="localhost",
     user="root",
+<<<<<<< HEAD
     password="",
     database="ir"
 )
@@ -28,14 +29,39 @@ for dataset_name in datasets:
         processed_str = " ".join(processed)
 
         
+=======
+    password="",  
+    database="ir" 
+)
+cursor = conn.cursor()
+
+datasets = ["antique", "beir","qora"]
+
+for dataset_name in datasets:
+    corpus = get_corpus(dataset_name)
+    items = list(corpus.items())
+
+    quarter = len(items) // 4
+    three_quarters = 3 * quarter
+
+    for doc_id, text in items[three_quarters:]:
+        processed = get_preprocessed_text_terms(text, dataset_name)
+        processed_str = " ".join(processed)
+
+>>>>>>> apis
         cursor.execute(
             "INSERT INTO documents (document_id, dataset_name, processed_text, text) VALUES (%s, %s, %s, %s)",
             (doc_id, dataset_name, processed_str, text)
         )
+<<<<<<< HEAD
       
     
     conn.commit()
    
 
+=======
+
+conn.commit()
+>>>>>>> apis
 cursor.close()
 conn.close()

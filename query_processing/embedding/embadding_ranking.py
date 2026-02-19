@@ -1,7 +1,12 @@
 from collections import OrderedDict
 import numpy as np
 from collections import OrderedDict
+<<<<<<< HEAD
 from embedding.embedding_query_processing import EmbeddingQueryProcessor
+=======
+from .embedding_query_processing import EmbeddingQueryProcessor
+
+>>>>>>> apis
 import faiss
 
 import sys

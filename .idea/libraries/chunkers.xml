@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="chunkers">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/nltk_data/nltk_data/chunkers/maxent_ne_chunker_tab.zip!/" />
+      <root url="jar://$PROJECT_DIR$/nltk_data/nltk_data/chunkers/maxent_ne_chunker.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

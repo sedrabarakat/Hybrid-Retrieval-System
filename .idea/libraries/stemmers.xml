@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="stemmers">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/nltk_data/nltk_data/stemmers/snowball_data.zip!/" />
+      <root url="jar://$PROJECT_DIR$/nltk_data/nltk_data/stemmers/rslp.zip!/" />
+      <root url="jar://$PROJECT_DIR$/nltk_data/nltk_data/stemmers/porter_test.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

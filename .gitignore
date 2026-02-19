@@ -23,4 +23,7 @@ __pycache__/
 # تجاهل كل الملفات داخل مجلدات saved_models بشكل عميق
 vectorize/saved_models/**/*
 indexing/saved_models/**/*
+<<<<<<< HEAD
 .idea/
+=======
+>>>>>>> apis

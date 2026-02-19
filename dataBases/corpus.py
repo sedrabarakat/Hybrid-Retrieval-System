@@ -2,7 +2,15 @@ import ir_datasets
 from collections import defaultdict
 
 def get_corpus(dataset_name: str) -> dict[str, str]:
+<<<<<<< HEAD
  
+=======
+    """
+    تحميل مستندات أو استعلامات من ir_datasets حسب dataset_name.
+    - 'beir' أو 'antique' لتحميل المستندات (docs)
+    - 'beir-queries' أو 'antique-queries' لتحميل الاستعلامات (queries)
+    """
+>>>>>>> apis
     if dataset_name == "beir":
         dataset = ir_datasets.load("beir/webis-touche2020/v2")
         corpus = {doc.doc_id: doc.text for doc in dataset.docs_iter()}
@@ -26,7 +34,14 @@ def get_corpus(dataset_name: str) -> dict[str, str]:
 
 
 def get_qrels(dataset_name: str) -> dict[str, dict[str, int]]:
+<<<<<<< HEAD
    
+=======
+    """
+    تحميل تقييمات الصلاحية (qrels) من ir_datasets بصيغة:
+    dict[query_id][doc_id] = relevance_score
+    """
+>>>>>>> apis
     if dataset_name == "beir":
         dataset = ir_datasets.load("beir/webis-touche2020/v2")
         qrels_raw = dataset.qrels_iter()
@@ -46,7 +61,14 @@ def get_qrels(dataset_name: str) -> dict[str, dict[str, int]]:
 
 
 def save_qrels_to_tsv(qrels: dict[str, dict[str, int]], filepath: str):
+<<<<<<< HEAD
    
+=======
+    """
+    حفظ qrels في ملف TSV بصيغة:
+    query_id \t 0 \t doc_id \t relevance
+    """
+>>>>>>> apis
     with open(filepath, 'w', encoding='utf-8') as f:
         for query_id, docs in qrels.items():
             for doc_id, relevance in docs.items():

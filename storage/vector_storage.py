@@ -49,6 +49,24 @@ def load_embeddings_joblib(name: str, vectorizer_type: str = "embedding"):
     return joblib.load(path)
 
 
+<<<<<<< HEAD
+=======
+def save_hybrid(array, name: str, vectorizer_type: str = "Hybrid"):
+    path = os.path.join(_get_dir(vectorizer_type), f"{name}_hybrid.joblib")
+    joblib.dump(array, path)
+
+def load_hybrid(name: str, vectorizer_type: str = "Hybrid"):
+    path = os.path.join(BASE_PATH, vectorizer_type, f"{name}_hybrid.joblib")
+    return joblib.load(path)
+
+
+# حفظ hybrid
+def save_hybrid(array, name: str, vectorizer_type: str = "Hybrid"):
+    path = os.path.join(_get_dir(vectorizer_type), f"{name}_hybrid.joblib")
+    joblib.dump(array, path)
+
+
+>>>>>>> apis
 def load_embeddings_ids(name: str, vectorizer_type: str = "embedding"):
     path = os.path.join(BASE_PATH, vectorizer_type, f"{name}_embeddings_doc_ids.joblib")
     return joblib.load(path)
@@ -103,6 +121,7 @@ def load_tfidf_vectorizer(name):
     
     vectorizer = joblib.load(path)
     
+<<<<<<< HEAD
     return vectorizer
 
 def save_clusters(clusters_array, name: str, vectorizer_type: str = "tfidf"):
@@ -132,3 +151,6 @@ def load_clusters(name: str, vectorizer_type: str = "tfidf"):
     except Exception as e:
         print(f"Error loading clusters array: {e}")
         raise
+=======
+    return vectorizer
+>>>>>>> apis

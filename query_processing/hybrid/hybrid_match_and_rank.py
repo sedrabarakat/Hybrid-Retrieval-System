@@ -5,11 +5,19 @@ sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 from collections import OrderedDict
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
+<<<<<<< HEAD
 from hybrid.hybrid_query_process import process_hybrid_query
+=======
+from .hybrid_query_process import process_hybrid_query  # Relative import
+>>>>>>> apis
 from storage.vector_storage import load_hyprid_ids
 from vectorize.hybrid import generate_hybrid
 
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> apis
 def match_and_rank_hybrid(query_text: str, dataset_name: str, top_k=10, similarity_threshold=0.3):
 
     doc_ids=load_hyprid_ids(dataset_name=dataset_name)
